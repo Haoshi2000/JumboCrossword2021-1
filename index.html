@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Jumbo Crossword 2021-1</title>
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bulma@0.9.1/css/bulma.min.css"
+    />
+    <script src="https://cdn.jsdelivr.net/npm/vue@2.6.12/dist/vue.js"></script>
+    <script src="/src/data.js"></script>
+    <style>
+      .table td {
+        width: 50px;
+        height: 50px;
+        border-color: hsl(0, 0%, 29%);
+        position: relative;
+      }
+      .table {
+        margin: auto;
+      }
+      .sticky {
+        position: sticky;
+        position: -webkit-sticky;
+        top: 0;
+      }
+      .input {
+        max-width: 30em;
+        color: hsl(0, 0%, 48%);
+      }
+      .input::placeholder {
+        color: hsl(217, 71%, 53%);
+        font-weight: bold;
+      }
+      .num {
+        font-size: 0.8em;
+        left: 0;
+        top: 0;
+        position: absolute;
+      }
+      .content {
+        text-align: center;
+        display: block;
+        font-size: 1.2em;
+      }
+      #change {
+        display: block;
+        margin: auto;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="app">
+      <div class="columns">
+        <div class="column is-three-fifths">
+          <div class="sticky">
+            <table class="table is-bordered">
+              <tbody>
+                <tr v-for="(items, row) in grid">
+                  <td
+                    v-for="(item, column) in items"
+                    :class="{'has-background-grey': grid[row][column]}"
+                  >
+                    <span class="num">{{keyNums[row][column]}}</span>
+                    <span class="content">{{texts[row][column]}}</span>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+            <button
+              class="button is-link is-light"
+              id="change"
+              @click="isColShowed=!isColShowed;isRowShowed=!isRowShowed"
+            >
+              {{buttonText}}
+            </button>
+          </div>
+        </div>
+        <div class="column">
+          <div
+            class="field"
+            v-for="(item, index) in colInputs"
+            v-show="isColShowed"
+          >
+            <label for="" class="label">{{colQuestions[index]}}</label>
+            <div class="control">
+              <input
+                type="text"
+                class="input"
+                :placeholder="item.length.toString()+'文字'"
+                @input="update(item, $event.target.value)"
+              />
+            </div>
+          </div>
+          <div
+            class="field"
+            v-for="(item, index) in rowInputs"
+            v-show="isRowShowed"
+          >
+            <label for="" class="label">{{rowQuestions[index]}}</label>
+            <div class="control">
+              <input
+                type="text"
+                class="input"
+                :placeholder="item.length.toString()+'文字'"
+                @input="update(item, $event.target.value)"
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+      <footer class="footer">
+        <p>
+          <a href="https://github.com/Haoshi2000/JumboCrossword2021-1"
+            >リポジトリはこちら</a
+          >
+        </p>
+        <p>Pull Requestで敲いてくれてもいいかも!?</p>
+      </footer>
+    </div>
+  </body>
+  <script>
+    new Vue({
+      el: '#app',
+      data: {
+        grid, // 0と1の二次元配列 1なら黒マスになる
+        rowQuestions,
+        colQuestions,
+        rowInputs: [],
+        colInputs: [],
+        texts: [],
+        keyNums: [],
+        isColShowed: true, // これのみでv-ifを使うとinputのvalueが保持されたままになる
+        isRowShowed: false,
+      },
+      computed: {
+        buttonText() {
+          return this.isColShowed ? 'ヨコのカギへ' : 'タテのカギへ';
+        },
+      },
+      mounted() {
+        // rowInputs(横のカギに対応)をセット
+        this.grid.forEach((item, index) => {
+          /**
+           * 3行目に横のカギが２つあり
+           * カギA(3文字):[[3,0],[3,1],[3,2]]
+           * カギB(4文字)[[3,5],[3,6],[3,7],[3,8]]
+           * とすると
+           * [二次元配列A,二次元配列B]をrowInputsにpushする
+           **/
+          const lists = item.reduce((acc, cur, i) => {
+            if (!cur) {
+              if (acc.length > 0) {
+                acc[acc.length - 1].push([index, i]);
+              } else {
+                acc.push([[index, i]]);
+              }
+            } else {
+              acc.push([]);
+            }
+            return acc;
+          }, []);
+          // 2文字以上でないとカギにならない
+          lists.forEach((value) => {
+            if (value.length >= 2) {
+              this.rowInputs.push(value);
+            }
+          });
+        });
+
+        // 横並びの二次元配列であるgridを縦並びにする
+        const revGrid = this.grid.map((item, index) => {
+          const result = [];
+          // 縦横のマスの数は同じ前提
+          for (let i = 0; i < this.grid.length; i++) {
+            result.push(this.grid[i][index]);
+          }
+          return result;
+        });
+        // colInputs(縦のカギに対応)をセット
+        revGrid.forEach((item, index) => {
+          const lists = item.reduce((acc, cur, i) => {
+            if (!cur) {
+              if (acc.length > 0) {
+                acc[acc.length - 1].push([i, index]);
+              } else {
+                acc.push([[i, index]]);
+              }
+            } else {
+              acc.push([]);
+            }
+            return acc;
+          }, []);
+          lists.forEach((value) => {
+            if (value.length >= 2) {
+              this.colInputs.push(value);
+            }
+          });
+        });
+        // カギの番号順になるようにソート
+        this.colInputs.sort((first, second) => first[0][0] - second[0][0]);
+
+        // textsとkeyNumsに空テキストの二次元配列をセット
+        this.texts = this.grid.map((item) => {
+          return item.map(() => '');
+        });
+        this.keyNums = this.grid.map((item) => {
+          return item.map(() => '');
+        });
+
+        // keyNumsをセット
+        let keyLocations = [];
+        this.rowInputs.forEach((item) => {
+          keyLocations.push(item[0]);
+        });
+        this.colInputs.forEach((item) => {
+          keyLocations.push(item[0]);
+        });
+        keyLocations.sort((first, second) => {
+          if (first[0] === second[0]) {
+            return first[1] - second[1];
+          }
+          return first[0] - second[0];
+        });
+        // 重複を削除
+        keyLocations = keyLocations.filter(
+          (item, index, self) =>
+            self.findIndex(
+              (value) => value[0] === item[0] && value[1] === item[1]
+            ) === index
+        );
+        keyLocations.forEach((item, i) => {
+          this.keyNums[item[0]][item[1]] = (i + 1).toString();
+        });
+      },
+      methods: {
+        update(list, value) {
+          const letters = value.split('');
+          if (list.length >= letters.length) {
+            letters.forEach((letter, index) => {
+              this.$set(this.texts[list[index][0]], list[index][1], letter);
+            });
+          } else {
+            list.forEach((location, index) => {
+              this.$set(this.texts[location[0]], location[1], letters[index]);
+            });
+          }
+        },
+      },
+    });
+  </script>
+</html>
