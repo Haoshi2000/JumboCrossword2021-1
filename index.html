@@ -12,8 +12,6 @@
     <script src="/src/data.js"></script>
     <style>
       .table td {
-        width: 41px;
-        height: 41px;
         border-color: hsl(0, 0%, 29%);
         position: relative;
       }
@@ -43,9 +41,8 @@
         text-align: center;
         display: block;
       }
-      #change {
-        display: block;
-        margin: auto;
+      #buttons {
+        justify-content: center;
       }
     </style>
   </head>
@@ -54,26 +51,41 @@
       <div class="columns">
         <div class="column is-three-fifths">
           <div class="sticky">
+            <div class="field is-grouped" id="buttons">
+              <p class="control">
+                <button class="button" @click="changeScale">
+                  {{sizeBtnTxt}}
+                </button>
+              </p>
+              <p class="control">
+                <button
+                  class="button is-link is-light"
+                  @click="isColShowed = !isColShowed; isRowShowed = !isRowShowed"
+                >
+                  {{keyBtnTxt}}
+                </button>
+              </p>
+            </div>
             <table class="table is-bordered" id="cross">
               <tbody>
                 <tr v-for="(items, row) in grid">
                   <td
                     v-for="(item, column) in items"
                     :class="{'has-background-grey': grid[row][column]}"
+                    :style="{width: (41 * scale) + 'px', height: (41 * scale) + 'px'}"
                   >
-                    <span class="num">{{keyNums[row][column]}}</span>
-                    <span class="content">{{texts[row][column]}}</span>
+                    <span
+                      class="num"
+                      :style="{'font-size': (0.75 * scale) + 'em'}"
+                      >{{keyNums[row][column]}}</span
+                    >
+                    <span class="content" :style="{'font-size': scale + 'em'}"
+                      >{{texts[row][column]}}</span
+                    >
                   </td>
                 </tr>
               </tbody>
             </table>
-            <button
-              class="button is-link is-light"
-              id="change"
-              @click="isColShowed=!isColShowed;isRowShowed=!isRowShowed"
-            >
-              {{buttonText}}
-            </button>
           </div>
         </div>
         <div class="column">
@@ -124,10 +136,15 @@
         keyNums: [],
         isColShowed: true, // これのみでv-ifを使うとinputのvalueが保持されたままになる
         isRowShowed: false,
+        isExpanded: false,
+        scale: 1,
       },
       computed: {
-        buttonText() {
+        keyBtnTxt() {
           return this.isColShowed ? 'ヨコのカギへ' : 'タテのカギへ';
+        },
+        sizeBtnTxt() {
+          return this.isExpanded ? '縮小する' : '拡大する';
         },
       },
       mounted() {
@@ -237,6 +254,14 @@
               this.$set(this.texts[location[0]], location[1], letters[index]);
             });
           }
+        },
+        changeScale() {
+          if (this.isExpanded) {
+            this.scale = 1;
+          } else {
+            this.scale = 1.25;
+          }
+          this.isExpanded = !this.isExpanded;
         },
       },
     });
