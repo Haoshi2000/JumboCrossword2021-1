@@ -12,13 +12,13 @@
     <script src="/src/data.js"></script>
     <style>
       .table td {
-        width: 50px;
-        height: 50px;
+        width: 41px;
+        height: 41px;
         border-color: hsl(0, 0%, 29%);
         position: relative;
       }
-      .table {
-        margin: auto;
+      #cross {
+        margin: 0 auto 1rem;
       }
       .sticky {
         position: sticky;
@@ -34,7 +34,7 @@
         font-weight: bold;
       }
       .num {
-        font-size: 0.8em;
+        font-size: 0.75em;
         left: 0;
         top: 0;
         position: absolute;
@@ -42,7 +42,6 @@
       .content {
         text-align: center;
         display: block;
-        font-size: 1.2em;
       }
       #change {
         display: block;
@@ -55,7 +54,7 @@
       <div class="columns">
         <div class="column is-three-fifths">
           <div class="sticky">
-            <table class="table is-bordered">
+            <table class="table is-bordered" id="cross">
               <tbody>
                 <tr v-for="(items, row) in grid">
                   <td
